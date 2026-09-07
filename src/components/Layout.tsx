@@ -9,11 +9,12 @@ const navigation = [
 ]
 
 export function Layout() {
+  const now = new Date()
   return (
     <div className="app-shell">
       <header className="topbar">
         <div className="brand">
-          <span className="brand__mark">JC</span>
+          <span className="brand__mark">✈</span>
           <div>
             <strong>Jorge Chávez</strong>
             <small>Centro de operaciones</small>
@@ -26,8 +27,10 @@ export function Layout() {
             </NavLink>
           ))}
         </nav>
-        <div className="system-status">
-          <span /> Sistema operativo
+        <div className="topbar__meta">
+          <time>{new Intl.DateTimeFormat('es-PE', { weekday: 'short', day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }).format(now)}</time>
+          <div className="system-status"><span /> Sistema operativo</div>
+          <span className="avatar">JC</span>
         </div>
       </header>
       <main>
@@ -36,4 +39,3 @@ export function Layout() {
     </div>
   )
 }
-

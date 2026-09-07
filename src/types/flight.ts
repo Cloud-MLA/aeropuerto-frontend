@@ -15,5 +15,6 @@ export interface Flight {
   scheduledAt: string
   gate: string
   status: FlightStatus
+  aircraft?: string
+  registration?: string
 }
-
