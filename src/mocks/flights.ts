@@ -10,6 +10,8 @@ export const mockFlights: Flight[] = [
     scheduledAt: '2026-09-07T14:20:00-05:00',
     gate: 'B12',
     status: 'Embarcando',
+    aircraft: 'Airbus A320neo',
+    registration: 'CC-BHB',
   },
   {
     id: 1842,
@@ -20,6 +22,8 @@ export const mockFlights: Flight[] = [
     scheduledAt: '2026-09-07T15:05:00-05:00',
     gate: 'A04',
     status: 'Programado',
+    aircraft: 'Airbus A320',
+    registration: 'CC-AWA',
   },
   {
     id: 1843,
@@ -30,6 +34,10 @@ export const mockFlights: Flight[] = [
     scheduledAt: '2026-09-07T15:40:00-05:00',
     gate: 'C08',
     status: 'Retrasado',
+    aircraft: 'Airbus A319',
+    registration: 'N723AV',
   },
+  { id: 1844, number: 'H2 171', airline: 'Sky Airline', origin: 'Lima', destination: 'Trujillo', scheduledAt: '2026-09-07T16:15:00-05:00', gate: 'B03', status: 'Programado', aircraft: 'Airbus A320neo', registration: 'CC-AZC' },
+  { id: 1845, number: 'CM 315', airline: 'Copa Airlines', origin: 'Panamá', destination: 'Lima', scheduledAt: '2026-09-07T17:00:00-05:00', gate: 'C05', status: 'Aterrizado', aircraft: 'Boeing 737 MAX 9', registration: 'HP-9901CMP' },
+  { id: 1846, number: 'IB 6650', airline: 'Iberia', origin: 'Lima', destination: 'Madrid', scheduledAt: '2026-09-07T18:25:00-05:00', gate: 'A06', status: 'Cancelado', aircraft: 'Airbus A350-900', registration: 'EC-NIS' },
 ]
-

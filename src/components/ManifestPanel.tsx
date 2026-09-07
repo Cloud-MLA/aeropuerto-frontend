@@ -15,7 +15,7 @@ export function ManifestPanel({ manifest, summary, onClose }: ManifestPanelProps
           <h2 id="manifest-title">Operación del vuelo #{manifest.flightId}</h2>
           <p>{manifest.aircraft}</p>
         </div>
-        <button className="secondary-action" onClick={onClose}>Cerrar manifiesto</button>
+        <button className="icon-action" aria-label="Cerrar manifiesto" onClick={onClose}>×</button>
       </div>
 
       <div className="summary-grid">
@@ -52,4 +52,3 @@ export function ManifestPanel({ manifest, summary, onClose }: ManifestPanelProps
     </section>
   )
 }
-
