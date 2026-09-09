@@ -228,3 +228,69 @@ td small { display: block; margin-top: 3px; color: var(--muted); }
   .filters-bar { grid-template-columns: 1fr; }.filters-bar .search--wide { grid-column: auto; }
   .flight-facts { grid-template-columns: 1fr; }
 }
+
+/* Ticket issuance and check-in */
+.ticket-page { min-height: calc(100vh - 64px); background: #f4f7fa; }
+.section-hero { padding: 38px 5vw 72px; color: white; background: linear-gradient(110deg, #081e39, #123e66 72%, #176c83); }
+.section-hero h1 { margin-top: 8px; font-size: clamp(34px, 4vw, 50px); }
+.section-hero > p { max-width: 720px; margin: 10px 0 0; color: #c4d5e4; }
+.hero-process { margin-top: 28px; display: flex; align-items: center; gap: 10px; color: #b9cad9; font-size: 12px; }
+.hero-process span { display: grid; place-items: center; width: 25px; height: 25px; border: 1px solid #7290aa; border-radius: 50%; }
+.hero-process span.is-active { border-color: var(--orange); color: white; background: var(--orange); }
+.hero-process i { width: 34px; height: 1px; background: #ffffff40; }
+.ticket-workspace { max-width: 1450px; margin: -38px auto 0; padding: 0 5vw 70px; }
+.ticket-workspace > .state-panel { margin-bottom: 18px; }
+.ticket-layout { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(320px, .65fr); gap: 20px; align-items: start; }
+.ticket-form-card, .boarding-card { border: 1px solid #dce5ee; border-radius: 12px; background: white; box-shadow: 0 12px 34px #18355110; }
+.ticket-form-card { padding: 28px; }
+.ticket-form-card header { display: flex; justify-content: space-between; align-items: start; gap: 20px; padding-bottom: 22px; border-bottom: 1px solid #e2e9ef; }
+.ticket-form-card h2 { margin-top: 6px; color: #0c294a; }
+.secure-label { padding: 7px 10px; border-radius: 99px; color: #147b59; background: #e8f7f1; font-size: 11px; font-weight: 700; }
+.form-grid { margin-top: 24px; display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+.field { display: grid; gap: 7px; }
+.field--wide { grid-column: 1 / -1; }
+.field > span { color: #556c85; font-size: 12px; font-weight: 600; }
+.field input, .field select { width: 100%; height: 46px; padding: 0 13px; border: 1px solid #cfdae5; border-radius: 8px; color: #193552; background: white; outline: none; }
+.field input:focus, .field select:focus { border-color: #1671c8; box-shadow: 0 0 0 3px #1671c815; }
+.form-summary { margin-top: 24px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.form-summary > div { padding: 15px; border-radius: 8px; background: #f3f7fa; }
+.form-summary span, .form-summary strong, .form-summary small { display: block; }
+.form-summary span { color: #718399; font-size: 10px; text-transform: uppercase; letter-spacing: .08em; }
+.form-summary strong { margin-top: 6px; color: #133251; }
+.form-summary small { margin-top: 4px; color: #718399; }
+.form-actions { margin-top: 24px; display: flex; justify-content: flex-end; gap: 10px; }
+.form-actions .primary-action { width: auto; min-width: 170px; margin: 0; }
+.boarding-card { overflow: hidden; }
+.boarding-card__top { padding: 24px; color: white; background: linear-gradient(125deg, #092745, #145a85); }
+.boarding-card__top span, .boarding-card__top strong, .boarding-card__top small { display: block; }
+.boarding-card__top span { color: #9fc4db; font-size: 10px; text-transform: uppercase; letter-spacing: .12em; }
+.boarding-card__top strong { margin-top: 10px; font: 700 25px 'Manrope'; }
+.boarding-card__top small { margin-top: 4px; color: #c6d8e6; }
+.boarding-passenger { padding: 22px 24px 16px; }
+.boarding-passenger span { color: #718399; font-size: 11px; }
+.boarding-passenger h2 { margin-top: 5px; color: #0c2948; font-size: 22px; }
+.boarding-passenger small { color: #718399; }
+.boarding-facts { margin: 0; padding: 0 24px; display: grid; grid-template-columns: 1fr 1fr; gap: 0; }
+.boarding-facts div { padding: 14px 0; border-top: 1px solid #e3e9ef; }
+.boarding-facts dt { color: #7a8da2; font-size: 10px; text-transform: uppercase; }
+.boarding-facts dd { margin: 5px 0 0; color: #173654; font-weight: 700; }
+.ticket-status { display: inline-flex; padding: 5px 9px; border-radius: 99px; color: #a25d11; background: #fff1df; font-size: 11px; }
+.ticket-status--done { color: #14734f; background: #e2f6ec; }
+.barcode { height: 38px; margin: 10px 24px 0; opacity: .65; background: repeating-linear-gradient(90deg, #102b46 0 2px, transparent 2px 5px, #102b46 5px 8px, transparent 8px 11px); }
+.boarding-card > .primary-action { width: calc(100% - 48px); margin: 20px 24px 24px; background: #0a2a49; }
+.boarding-empty { min-height: 330px; padding: 60px 34px; display: grid; place-items: center; align-content: center; text-align: center; color: #708399; }
+.boarding-empty span { display: grid; place-items: center; width: 64px; height: 64px; border-radius: 50%; color: #176fc2; background: #eaf4ff; font-size: 26px; }
+.boarding-empty p { max-width: 240px; line-height: 1.5; }
+
+@media (max-width: 940px) {
+  .ticket-layout { grid-template-columns: 1fr; }
+}
+@media (max-width: 620px) {
+  .hero-process { flex-wrap: wrap; }
+  .ticket-form-card { padding: 20px; }
+  .ticket-form-card header { flex-direction: column; }
+  .form-grid, .form-summary { grid-template-columns: 1fr; }
+  .field--wide { grid-column: auto; }
+  .form-actions { flex-direction: column-reverse; }
+  .form-actions button, .form-actions .primary-action { width: 100%; }
+}
