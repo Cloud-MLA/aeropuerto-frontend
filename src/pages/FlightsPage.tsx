@@ -1,13 +1,22 @@
 import { useEffect, useMemo, useState } from 'react'
-import { getFlight, listFlights } from '../api/flights'
+import { getFlight, listFlights, updateFlightStatus } from '../api/flights'
 import { getManifest, getManifestSummary } from '../api/manifests'
 import { ManifestPanel } from '../components/ManifestPanel'
 import { StatePanel } from '../components/StatePanel'
 import { StatusBadge } from '../components/StatusBadge'
 import type { Flight } from '../types/flight'
+import type { FlightStatus } from '../types/flight'
 import type { FlightManifest, ManifestSummary } from '../types/manifest'
 
-const statuses = ['Todos', 'Programado', 'Embarcando', 'Aterrizado', 'Retrasado', 'Cancelado']
+const statuses = ['Todos', 'Programado', 'Embarcando', 'Despegado', 'Aterrizado', 'Retrasado', 'Cancelado']
+const transitions: Record<FlightStatus, FlightStatus[]> = {
+  Programado: ['Embarcando', 'Retrasado', 'Cancelado'],
+  Embarcando: ['Despegado', 'Retrasado', 'Cancelado'],
+  Retrasado: ['Embarcando', 'Despegado', 'Cancelado'],
+  Despegado: ['Aterrizado'],
+  Aterrizado: [],
+  Cancelado: [],
+}
 
 export function FlightsPage() {
   const [flights, setFlights] = useState<Flight[]>([])
@@ -20,6 +29,7 @@ export function FlightsPage() {
   const [error, setError] = useState('')
   const [manifest, setManifest] = useState<FlightManifest | null>(null)
   const [summary, setSummary] = useState<ManifestSummary | null>(null)
+  const [savingStatus, setSavingStatus] = useState(false)
 
   useEffect(() => {
     listFlights()
@@ -62,6 +72,21 @@ export function FlightsPage() {
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : 'No se pudo consultar el manifiesto.')
     } finally { setManifestLoading(false) }
+  }
+
+  async function changeFlightStatus(nextStatus: FlightStatus) {
+    if (!selected || nextStatus === selected.status) return
+    setError('')
+    setSavingStatus(true)
+    try {
+      const updated = await updateFlightStatus(selected.id, nextStatus)
+      setSelected(updated)
+      setFlights((items) => items.map((item) => item.id === updated.id ? updated : item))
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : 'No se pudo actualizar el estado del vuelo.')
+    } finally {
+      setSavingStatus(false)
+    }
   }
 
   function clearFilters() {
@@ -121,7 +146,8 @@ export function FlightsPage() {
                 <div className="drawer-heading"><span>Detalle del vuelo</span><button className="icon-action" aria-label="Cerrar detalle" onClick={() => setSelected(null)}>×</button></div>
                 <div className="drawer-flight"><h2>{selected.number}</h2><span>{selected.airline}</span><StatusBadge status={selected.status} /></div>
                 <div className="drawer-route"><div><strong>{selected.origin}</strong><small>Origen</small></div><span>✈</span><div><strong>{selected.destination}</strong><small>Destino</small></div></div>
-                <dl className="flight-facts"><div><dt>Hora programada</dt><dd>{new Intl.DateTimeFormat('es-PE', { hour: '2-digit', minute: '2-digit' }).format(new Date(selected.scheduledAt))}</dd></div><div><dt>Puerta</dt><dd>{selected.gate}</dd></div><div><dt>Aeronave</dt><dd>{selected.aircraft ?? 'Por confirmar'}</dd></div><div><dt>Matrícula</dt><dd>{selected.registration ?? '—'}</dd></div></dl>
+                <dl className="flight-facts"><div><dt>Hora programada</dt><dd>{new Intl.DateTimeFormat('es-PE', { hour: '2-digit', minute: '2-digit' }).format(new Date(selected.scheduledAt))}</dd></div><div><dt>Hora real</dt><dd>{selected.actualAt ? new Intl.DateTimeFormat('es-PE', { dateStyle: 'short', timeStyle: 'short' }).format(new Date(selected.actualAt)) : 'Pendiente'}</dd></div><div><dt>Tipo</dt><dd>{selected.type ?? '—'}</dd></div><div><dt>Matrícula</dt><dd>{selected.registration ?? '—'}</dd></div></dl>
+                <label className="field flight-status-field"><span>Actualizar estado operativo</span><select disabled={savingStatus || transitions[selected.status].length === 0} value={selected.status} onChange={(event) => void changeFlightStatus(event.target.value as FlightStatus)}><option value={selected.status}>{selected.status}</option>{transitions[selected.status].map((nextStatus) => <option key={nextStatus} value={nextStatus}>{nextStatus}</option>)}</select><small>{transitions[selected.status].length === 0 ? 'Este vuelo se encuentra en un estado final.' : 'Solo se muestran transiciones permitidas por MS2.'}</small></label>
                 <div className="drawer-tabs"><button className="active">Resumen</button><button>Pasajeros</button><button>Recursos</button></div>
                 <div className="drawer-note"><strong>Información operativa</strong><p>Consulta pasajeros, equipaje, tripulación, recursos e incidencias asociadas.</p></div>
                 <button className="primary-action" disabled={manifestLoading} onClick={() => void loadManifest()}>{manifestLoading ? 'Consultando…' : '▣  Ver manifiesto  →'}</button>

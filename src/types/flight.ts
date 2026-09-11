@@ -13,8 +13,11 @@ export interface Flight {
   origin: string
   destination: string
   scheduledAt: string
+  actualAt?: string | null
   gate: string
   status: FlightStatus
+  type?: 'Nacional' | 'Internacional'
+  airlineId?: string
   aircraft?: string
   registration?: string
 }
