@@ -66,7 +66,10 @@ h1, h2 { margin: 0; font-family: 'Manrope', sans-serif; }
 .flight-card__gate { color: var(--muted); font-size: 13px; }
 .status { display: inline-flex; justify-content: center; padding: 6px 9px; border-radius: 99px; font-size: 11px; font-weight: 700; color: #31566f; background: #e8f1f5; }
 .status--embarcando, .status--aterrizado { color: #146c4b; background: #e0f5eb; }
+.status--despegado { color: #245f96; background: #e6f1fc; }
 .status--retrasado, .status--cancelado { color: #a64631; background: #fae9e4; }
+.flight-status-field { margin: 16px 0; }
+.flight-status-field small { color: #6b7f91; font-size: 11px; }
 
 .detail-panel { min-height: 360px; padding: 28px; border-radius: 12px; color: white; background: var(--navy); }
 .detail-panel h2 { margin-top: 10px; font-size: 34px; }
