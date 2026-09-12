@@ -1,5 +1,17 @@
 const API_BASE = (import.meta.env.VITE_API_BASE ?? '').replace(/\/$/, '')
 export const USE_MOCKS = import.meta.env.VITE_USE_MOCKS !== 'false'
+const REAL_SERVICES = new Set(
+  (import.meta.env.VITE_REAL_SERVICES ?? '')
+    .split(',')
+    .map((service) => service.trim().toLowerCase())
+    .filter(Boolean),
+)
+
+export function shouldUseMocksFor(service: 'ms1' | 'ms2' | 'ms3' | 'ms4' | 'ms5'): boolean {
+  if (USE_MOCKS) return true
+  if (REAL_SERVICES.size === 0) return false
+  return !REAL_SERVICES.has(service)
+}
 
 export class ApiError extends Error {
   constructor(
