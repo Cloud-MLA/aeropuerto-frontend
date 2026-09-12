@@ -1,12 +1,12 @@
 import { checkInMockTicket, createMockTicket, mockMigrationCategories } from '../mocks/tickets'
 import type { MigrationCategory, Ticket, TicketDraft } from '../types/ticket'
-import { request, useMocksFor } from './client'
+import { request, shouldUseMocksFor } from './client'
 
 const delay = (milliseconds: number) =>
   new Promise((resolve) => window.setTimeout(resolve, milliseconds))
 
 export async function listMigrationCategories(): Promise<MigrationCategory[]> {
-  if (useMocksFor('ms1')) {
+  if (shouldUseMocksFor('ms1')) {
     await delay(250)
     return mockMigrationCategories
   }
@@ -14,7 +14,7 @@ export async function listMigrationCategories(): Promise<MigrationCategory[]> {
 }
 
 export async function issueTicket(draft: TicketDraft): Promise<Ticket> {
-  if (useMocksFor('ms1')) {
+  if (shouldUseMocksFor('ms1')) {
     await delay(650)
     return createMockTicket(draft)
   }
@@ -25,7 +25,7 @@ export async function issueTicket(draft: TicketDraft): Promise<Ticket> {
 }
 
 export async function checkInTicket(id: number): Promise<Ticket> {
-  if (useMocksFor('ms1')) {
+  if (shouldUseMocksFor('ms1')) {
     await delay(500)
     return checkInMockTicket(id)
   }

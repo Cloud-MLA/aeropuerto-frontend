@@ -70,6 +70,7 @@ h1, h2 { margin: 0; font-family: 'Manrope', sans-serif; }
 .status--retrasado, .status--cancelado { color: #a64631; background: #fae9e4; }
 .flight-status-field { margin: 16px 0; }
 .flight-status-field small { color: #6b7f91; font-size: 11px; }
+.drawer-note--error { border-color: #f1b6a8; color: #8f3929; background: #fff5f2; }
 
 .detail-panel { min-height: 360px; padding: 28px; border-radius: 12px; color: white; background: var(--navy); }
 .detail-panel h2 { margin-top: 10px; font-size: 34px; }

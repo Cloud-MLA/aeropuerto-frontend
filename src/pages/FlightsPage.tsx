@@ -29,6 +29,7 @@ export function FlightsPage() {
   const [error, setError] = useState('')
   const [manifest, setManifest] = useState<FlightManifest | null>(null)
   const [summary, setSummary] = useState<ManifestSummary | null>(null)
+  const [manifestError, setManifestError] = useState('')
   const [savingStatus, setSavingStatus] = useState(false)
 
   useEffect(() => {
@@ -55,6 +56,7 @@ export function FlightsPage() {
 
   async function selectFlight(id: number) {
     setError('')
+    setManifestError('')
     setManifest(null)
     setSummary(null)
     try { setSelected(await getFlight(id)) }
@@ -63,14 +65,17 @@ export function FlightsPage() {
 
   async function loadManifest() {
     if (!selected) return
-    setError('')
+    setManifestError('')
     setManifestLoading(true)
     try {
       const [manifestResult, summaryResult] = await Promise.all([getManifest(selected.id), getManifestSummary(selected.id)])
       setManifest(manifestResult)
       setSummary(summaryResult)
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : 'No se pudo consultar el manifiesto.')
+      const message = reason instanceof Error ? reason.message : 'No se pudo consultar el manifiesto.'
+      setManifestError(message.includes('No existe')
+        ? 'El manifiesto de este vuelo estará disponible cuando se integre el microservicio MS4.'
+        : message)
     } finally { setManifestLoading(false) }
   }
 
@@ -149,7 +154,7 @@ export function FlightsPage() {
                 <dl className="flight-facts"><div><dt>Hora programada</dt><dd>{new Intl.DateTimeFormat('es-PE', { hour: '2-digit', minute: '2-digit' }).format(new Date(selected.scheduledAt))}</dd></div><div><dt>Hora real</dt><dd>{selected.actualAt ? new Intl.DateTimeFormat('es-PE', { dateStyle: 'short', timeStyle: 'short' }).format(new Date(selected.actualAt)) : 'Pendiente'}</dd></div><div><dt>Tipo</dt><dd>{selected.type ?? '—'}</dd></div><div><dt>Matrícula</dt><dd>{selected.registration ?? '—'}</dd></div></dl>
                 <label className="field flight-status-field"><span>Actualizar estado operativo</span><select disabled={savingStatus || transitions[selected.status].length === 0} value={selected.status} onChange={(event) => void changeFlightStatus(event.target.value as FlightStatus)}><option value={selected.status}>{selected.status}</option>{transitions[selected.status].map((nextStatus) => <option key={nextStatus} value={nextStatus}>{nextStatus}</option>)}</select><small>{transitions[selected.status].length === 0 ? 'Este vuelo se encuentra en un estado final.' : 'Solo se muestran transiciones permitidas por MS2.'}</small></label>
                 <div className="drawer-tabs"><button className="active">Resumen</button><button>Pasajeros</button><button>Recursos</button></div>
-                <div className="drawer-note"><strong>Información operativa</strong><p>Consulta pasajeros, equipaje, tripulación, recursos e incidencias asociadas.</p></div>
+                <div className={`drawer-note ${manifestError ? 'drawer-note--error' : ''}`}><strong>{manifestError ? 'Manifiesto no disponible' : 'Información operativa'}</strong><p>{manifestError || 'Consulta pasajeros, equipaje, tripulación, recursos e incidencias asociadas.'}</p></div>
                 <button className="primary-action" disabled={manifestLoading} onClick={() => void loadManifest()}>{manifestLoading ? 'Consultando…' : '▣  Ver manifiesto  →'}</button>
               </> : <StatePanel eyebrow="Detalle" title="Selecciona un vuelo" message="Consulta la información operativa desde la tabla." />}
             </aside>

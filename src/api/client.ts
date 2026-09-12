@@ -7,7 +7,7 @@ const REAL_SERVICES = new Set(
     .filter(Boolean),
 )
 
-export function useMocksFor(service: 'ms1' | 'ms2' | 'ms3' | 'ms4' | 'ms5'): boolean {
+export function shouldUseMocksFor(service: 'ms1' | 'ms2' | 'ms3' | 'ms4' | 'ms5'): boolean {
   if (USE_MOCKS) return true
   if (REAL_SERVICES.size === 0) return false
   return !REAL_SERVICES.has(service)
