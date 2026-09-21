@@ -1,14 +1,15 @@
 export type ResourceStatus = 'Libre' | 'Ocupado' | 'Mantenimiento' | 'Fuera de servicio'
-export type IncidentSeverity = 'Baja' | 'Media' | 'Alta' | 'Crítica'
+export type IncidentSeverity = 'Leve' | 'Moderada' | 'Alta' | 'Critica'
 
 export interface AirportResource {
+  backendId?: string
   id: number
   code: string
   name: string
   type: 'Manga' | 'Radar' | 'Puerta' | 'Vehículo'
   zone: string
   status: ResourceStatus
-  lastInspection: string
+  lastInspection?: string
 }
 
 export interface IncidentDraft {

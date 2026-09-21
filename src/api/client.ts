@@ -23,23 +23,56 @@ export class ApiError extends Error {
   }
 }
 
+function dependencyMessage(status?: number) {
+  if (status === 404) return 'El recurso solicitado no existe o todavía no está publicado en API Gateway.'
+  if (status === 409) return 'La operación entra en conflicto con el estado actual del recurso.'
+  if (status === 422) return 'La operación no cumple una regla de negocio del microservicio.'
+  if (status === 502 || status === 503 || status === 504) return 'El microservicio está temporalmente fuera de servicio. Inténtalo nuevamente en unos minutos.'
+  return status ? `La API respondió con estado ${status}.` : 'No fue posible comunicarse con la API.'
+}
+
+async function readApiMessage(response: Response) {
+  try {
+    const body = await response.clone().json() as { detail?: unknown; error?: { message?: unknown }; message?: unknown }
+    const candidate = body.error?.message ?? body.detail ?? body.message
+    return typeof candidate === 'string' && candidate.trim() ? candidate : dependencyMessage(response.status)
+  } catch {
+    return dependencyMessage(response.status)
+  }
+}
+
 export async function request<T>(path: string, init?: RequestInit): Promise<T> {
   if (!API_BASE) {
     throw new ApiError('La URL de API Gateway no está configurada.')
   }
 
-  const response = await fetch(`${API_BASE}${path}`, {
-    ...init,
-    headers: {
-      'Content-Type': 'application/json',
-      ...init?.headers,
-    },
-  })
+  const controller = new AbortController()
+  const timeout = window.setTimeout(() => controller.abort(), 12_000)
+  let response: Response
 
-  if (!response.ok) {
-    throw new ApiError(`La API respondió con estado ${response.status}.`, response.status)
+  try {
+    response = await fetch(`${API_BASE}${path}`, {
+      ...init,
+      signal: init?.signal ?? controller.signal,
+      headers: {
+        'Content-Type': 'application/json',
+        ...init?.headers,
+      },
+    })
+  } catch (reason) {
+    if (reason instanceof DOMException && reason.name === 'AbortError') {
+      throw new ApiError('La API tardó demasiado en responder. Verifica que el microservicio esté desplegado.')
+    }
+    throw new ApiError('No se pudo conectar con API Gateway. Verifica el despliegue, la red y la configuración CORS.')
+  } finally {
+    window.clearTimeout(timeout)
   }
 
+  if (!response.ok) {
+    throw new ApiError(await readApiMessage(response), response.status)
+  }
+
+  if (response.status === 204) return undefined as T
   return response.json() as Promise<T>
 }
 

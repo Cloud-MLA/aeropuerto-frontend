@@ -8,7 +8,9 @@ import type { MigrationCategory, Ticket } from '../types/ticket'
 export function TicketsPage() {
   const [flights, setFlights] = useState<Flight[]>([])
   const [categories, setCategories] = useState<MigrationCategory[]>([])
-  const [passengerName, setPassengerName] = useState('')
+  const [firstName, setFirstName] = useState('')
+  const [lastName, setLastName] = useState('')
+  const [birthDate, setBirthDate] = useState('')
   const [documentType, setDocumentType] = useState('DNI')
   const [documentNumber, setDocumentNumber] = useState('')
   const [flightId, setFlightId] = useState('')
@@ -37,7 +39,8 @@ export function TicketsPage() {
     setError('')
     setSubmitting(true)
     try {
-      const result = await issueTicket({ passengerName: passengerName.trim(), documentType, documentNumber: documentNumber.trim(), flightId: Number(flightId), categoryId: Number(categoryId) })
+      if (!selectedFlight || !selectedCategory) throw new Error('Selecciona un vuelo y una categoría migratoria.')
+      const result = await issueTicket({ firstName: firstName.trim(), lastName: lastName.trim(), birthDate, documentType, documentNumber: documentNumber.trim(), flightId: selectedFlight.id, flightNumber: selectedFlight.number, categoryId: selectedCategory.id, categoryName: selectedCategory.name, tuua: selectedCategory.tuua })
       setTicket(result)
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : 'No fue posible emitir el ticket.')
@@ -50,13 +53,15 @@ export function TicketsPage() {
     if (!ticket) return
     setError('')
     setCheckingIn(true)
-    try { setTicket(await checkInTicket(ticket.id)) }
+    try { setTicket(await checkInTicket(ticket)) }
     catch (reason) { setError(reason instanceof Error ? reason.message : 'No fue posible completar el check-in.') }
     finally { setCheckingIn(false) }
   }
 
   function reset() {
-    setPassengerName('')
+    setFirstName('')
+    setLastName('')
+    setBirthDate('')
     setDocumentNumber('')
     setFlightId('')
     setCategoryId('')
@@ -80,9 +85,11 @@ export function TicketsPage() {
             <form className="ticket-form-card" onSubmit={(event) => void submit(event)}>
               <header><div><span className="eyebrow">Nueva emisión</span><h2>Información del pasajero</h2></div><span className="secure-label">● Validación segura</span></header>
               <div className="form-grid">
-                <label className="field field--wide"><span>Nombre completo</span><input required value={passengerName} onChange={(event) => setPassengerName(event.target.value)} placeholder="Ej. Valeria Mendoza Ruiz" /></label>
+                <label className="field"><span>Nombres</span><input required maxLength={50} value={firstName} onChange={(event) => setFirstName(event.target.value)} placeholder="Ej. Valeria" /></label>
+                <label className="field"><span>Apellidos</span><input required maxLength={50} value={lastName} onChange={(event) => setLastName(event.target.value)} placeholder="Ej. Mendoza Ruiz" /></label>
+                <label className="field"><span>Fecha de nacimiento</span><input required type="date" max={new Date().toISOString().slice(0, 10)} value={birthDate} onChange={(event) => setBirthDate(event.target.value)} /></label>
                 <label className="field"><span>Tipo de documento</span><select value={documentType} onChange={(event) => setDocumentType(event.target.value)}><option>DNI</option><option>Pasaporte</option><option>CE</option></select></label>
-                <label className="field"><span>Número de documento</span><input required minLength={6} value={documentNumber} onChange={(event) => setDocumentNumber(event.target.value)} placeholder="Documento del pasajero" /></label>
+                <label className="field field--wide"><span>Número de documento</span><input required minLength={6} maxLength={15} value={documentNumber} onChange={(event) => setDocumentNumber(event.target.value)} placeholder="Documento del pasajero" /></label>
                 <label className="field field--wide"><span>Vuelo disponible</span><select required value={flightId} onChange={(event) => setFlightId(event.target.value)}><option value="">Selecciona un vuelo</option>{flights.map((flight) => <option key={flight.id} value={flight.id}>{flight.number} · {flight.origin} → {flight.destination} · {flight.gate}</option>)}</select></label>
                 <label className="field field--wide"><span>Categoría migratoria</span><select required value={categoryId} onChange={(event) => setCategoryId(event.target.value)}><option value="">Selecciona una categoría</option>{categories.map((category) => <option key={category.id} value={category.id}>{category.name} · TUUA US$ {category.tuua.toFixed(2)}</option>)}</select></label>
               </div>
