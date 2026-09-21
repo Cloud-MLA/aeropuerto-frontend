@@ -6,11 +6,16 @@ export interface MigrationCategory {
 }
 
 export interface TicketDraft {
-  passengerName: string
+  firstName: string
+  lastName: string
+  birthDate: string
   documentType: string
   documentNumber: string
   flightId: number
+  flightNumber: string
   categoryId: number
+  categoryName: string
+  tuua: number
 }
 
 export interface Ticket {

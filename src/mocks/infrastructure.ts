@@ -11,7 +11,7 @@ const resources: AirportResource[] = [
 
 const incidents: Incident[] = [
   { id: 301, title: 'Lectura intermitente', type: 'Falla_Radar', severity: 'Alta', description: 'Se detectaron pérdidas breves de señal.', resourceId: 3, resourceCode: 'RDR-02', flightId: 1841, status: 'En atención', reportedAt: '2026-09-09T08:35:00-05:00' },
-  { id: 302, title: 'Sensor de acople', type: 'Falla_Manga', severity: 'Media', description: 'El sensor requiere calibración preventiva.', resourceId: 2, resourceCode: 'MGA-04', status: 'Abierta', reportedAt: '2026-09-09T09:10:00-05:00' },
+  { id: 302, title: 'Sensor de acople', type: 'Manga_Inoperativa', severity: 'Moderada', description: 'El sensor requiere calibración preventiva.', resourceId: 2, resourceCode: 'MGA-04', status: 'Abierta', reportedAt: '2026-09-09T09:10:00-05:00' },
 ]
 
 export function getMockResources(status?: ResourceStatus): AirportResource[] {

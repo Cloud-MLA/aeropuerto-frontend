@@ -16,7 +16,7 @@ export function createMockTicket(draft: TicketDraft): Ticket {
 
   const ticket: Ticket = {
     id: 60001 + mockTickets.length,
-    passengerName: draft.passengerName,
+    passengerName: `${draft.firstName} ${draft.lastName}`,
     documentType: draft.documentType,
     documentNumber: draft.documentNumber,
     flightId: flight.id,
