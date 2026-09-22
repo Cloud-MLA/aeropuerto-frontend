@@ -1,6 +1,7 @@
 import { mockManifests, summarizeManifest } from '../mocks/manifests'
 import type { FlightManifest, ManifestSummary } from '../types/manifest'
 import { request, shouldUseMocksFor } from './client'
+import { adaptManifest, adaptManifestSummary } from './contractAdapters'
 
 const delay = (milliseconds: number) =>
   new Promise((resolve) => window.setTimeout(resolve, milliseconds))
@@ -13,10 +14,10 @@ export async function getManifest(flightId: number): Promise<FlightManifest> {
     return manifest
   }
 
-  return request<FlightManifest>(`/api/manifiesto/manifiesto/${flightId}`)
+  return adaptManifest(await request<unknown>(`/api/manifiesto/manifiesto/${flightId}`))
 }
 
-export async function getManifestSummary(flightId: number): Promise<ManifestSummary> {
+export async function getManifestSummary(flightId: number, manifest: FlightManifest): Promise<ManifestSummary> {
   if (shouldUseMocksFor('ms4')) {
     await delay(250)
     const manifest = mockManifests[flightId]
@@ -24,6 +25,6 @@ export async function getManifestSummary(flightId: number): Promise<ManifestSumm
     return summarizeManifest(manifest)
   }
 
-  return request<ManifestSummary>(`/api/manifiesto/manifiesto/${flightId}/resumen`)
+  return adaptManifestSummary(await request<unknown>(`/api/manifiesto/manifiesto/${flightId}/resumen`), manifest)
 }
 

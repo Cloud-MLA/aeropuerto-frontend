@@ -41,13 +41,13 @@ async function readApiMessage(response: Response) {
   }
 }
 
-export async function request<T>(path: string, init?: RequestInit): Promise<T> {
+export async function request<T>(path: string, init?: RequestInit, timeoutMs = 12_000): Promise<T> {
   if (!API_BASE) {
     throw new ApiError('La URL de API Gateway no está configurada.')
   }
 
   const controller = new AbortController()
-  const timeout = window.setTimeout(() => controller.abort(), 12_000)
+  const timeout = window.setTimeout(() => controller.abort(), timeoutMs)
   let response: Response
 
   try {

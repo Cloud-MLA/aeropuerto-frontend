@@ -77,7 +77,7 @@ VITE_MS5_OPENAPI_URL=https://<host>/api/analitica/openapi.json
 | Operaciones | GET | `/api/vuelos` | MS2 | Lista y filtra vuelos |
 | Operaciones | GET | `/api/vuelos/{id}` | MS2 | Consulta el detalle |
 | Operaciones | PATCH | `/api/vuelos/{id}/estado` | MS2 | Ejecuta una transición válida |
-| Manifiesto | GET | `/api/manifiesto/manifiesto/{id}` | MS4 | Consolida pasajeros, tripulación y recursos |
+| Manifiesto | GET | `/api/manifiesto/manifiesto/{id}` | MS4 | Consolida vuelo, tickets, tripulación e incidencias |
 | Manifiesto | GET | `/api/manifiesto/manifiesto/{id}/resumen` | MS4 | Obtiene contadores operacionales |
 | Tickets | GET | `/api/pasajeros/categorias-migratorias` | MS1 | Carga categorías y TUUA |
 | Tickets | GET | `/api/pasajeros/pasajeros?tipo_documento=&numero_documento=` | MS1 | Localiza un pasajero existente |
@@ -98,10 +98,21 @@ VITE_MS5_OPENAPI_URL=https://<host>/api/analitica/openapi.json
 
 ## Manejo de fallos
 
-- Tiempo máximo por solicitud: 12 segundos.
+- Tiempo máximo por solicitud: 12 segundos (75 segundos para las consultas Athena de MS5).
 - Mensajes específicos para recurso inexistente (`404`), conflicto (`409`), regla de negocio (`422`) y dependencia no disponible (`502–504`).
 - Mensaje explícito ante fallos de red, configuración de API Gateway o CORS.
 - MS2 respeta la máquina de estados y registra `horaReal` desde el backend al pasar a `Despegado`.
+- El frontend adapta el formato publicado por MS4 y MS5. Si MS1 no entrega nombre, asiento o equipaje por ticket, esos campos se muestran como no disponibles; no se infieren datos. El manifiesto también muestra los `warnings` de dependencias caídas.
+
+## Verificación local
+
+```bash
+npm test
+npm run lint
+npm run build
+```
+
+Las pruebas de contratos usan respuestas de ejemplo de MS4 y MS5. No sustituyen la prueba final con los servicios desplegados.
 
 ## Despliegue en AWS Amplify
 

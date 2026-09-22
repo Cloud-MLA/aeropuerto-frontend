@@ -1,9 +1,10 @@
 import { type CSSProperties, useEffect, useMemo, useState } from 'react'
 import { getCrisisAnalytics } from '../api/analytics'
+import { shouldUseMocksFor } from '../api/client'
 import { StatePanel } from '../components/StatePanel'
 import type { CrisisAnalytics } from '../types/analytics'
 
-const money = new Intl.NumberFormat('es-PE', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 })
+const money = new Intl.NumberFormat('es-PE', { style: 'currency', currency: 'PEN', maximumFractionDigits: 0 })
 
 function HorizontalBars({ items, value, label }: { items: Array<{ name: string; amount: number }>; value: (amount: number) => string; label: string }) {
   const maximum = Math.max(...items.map((item) => item.amount), 1)
@@ -36,23 +37,23 @@ export function DashboardPage() {
     const delay = analytics.averageDelay.find((item) => item.flightType === 'Internacional')?.averageMinutes ?? 0
     const fuel = analytics.fuelIncidents.reduce((sum, item) => sum + item.incidents, 0)
     const revenue = analytics.tuuaRevenue.reduce((sum, item) => sum + item.amount, 0)
-    const peak = Math.max(...analytics.peakDelays.map((item) => item.percentage))
+    const peak = Math.max(0, ...analytics.peakDelays.filter((item) => !item.period.startsWith('NO PUNTA')).map((item) => item.percentage))
     return { failures, delay, fuel, revenue, peak }
   }, [analytics])
 
   return (
     <section className="analytics-page">
-      <div className="section-hero analytics-hero"><span className="eyebrow">Inteligencia operacional</span><h1>Dashboard de crisis</h1><p>Indicadores consolidados desde el lago de datos para anticipar riesgos y priorizar decisiones.</p><div className="analytics-meta"><span>● Athena conectado</span><span>Última actualización: {new Intl.DateTimeFormat('es-PE', { hour: '2-digit', minute: '2-digit' }).format(updatedAt)}</span><button onClick={() => void load()} disabled={loading}>↻ Actualizar</button></div></div>
+        <div className="section-hero analytics-hero"><span className="eyebrow">Inteligencia operacional</span><h1>Dashboard de crisis</h1><p>Indicadores consolidados desde el lago de datos para anticipar riesgos y priorizar decisiones.</p><div className="analytics-meta"><span>{shouldUseMocksFor('ms5') ? '● Datos de demostración' : analytics && !error ? '● MS5 respondió' : '● MS5 pendiente'}</span><span>Última actualización: {new Intl.DateTimeFormat('es-PE', { hour: '2-digit', minute: '2-digit' }).format(updatedAt)}</span><button onClick={() => void load()} disabled={loading}>↻ Actualizar</button></div></div>
       <div className="analytics-workspace">
         {error && <StatePanel eyebrow="Atención" title="No se pudo actualizar el dashboard" message={error} tone="error" />}
         {loading && <StatePanel eyebrow="Analizando" title="Consultando Amazon Athena" message="Procesando las cinco consultas operacionales…" />}
         {!loading && analytics && summary && <>
           <div className="analytics-kpis">
             <article className="kpi-card kpi-card--red"><span>Fallas de recursos</span><strong>{summary.failures}</strong><small>Últimos 7 días</small><b>Requiere seguimiento</b></article>
-            <article className="kpi-card kpi-card--amber"><span>Retraso internacional</span><strong>{summary.delay.toFixed(1)} min</strong><small>Promedio operacional</small><b>+4.2 min vs. periodo anterior</b></article>
-            <article className="kpi-card kpi-card--orange"><span>Incidencias de combustible</span><strong>{summary.fuel}</strong><small>Eventos por aerolínea</small><b>5 aerolíneas afectadas</b></article>
+            <article className="kpi-card kpi-card--amber"><span>Retraso internacional</span><strong>{summary.delay.toFixed(1)} min</strong><small>Promedio operacional</small><b>Según consulta Q2</b></article>
+            <article className="kpi-card kpi-card--orange"><span>Incidencias de combustible</span><strong>{summary.fuel}</strong><small>Eventos por aerolínea</small><b>{analytics.fuelIncidents.filter((item) => item.incidents > 0).length} aerolíneas afectadas</b></article>
             <article className="kpi-card kpi-card--green"><span>Recaudación TUUA</span><strong>{money.format(summary.revenue)}</strong><small>Acumulado analizado</small><b>Información financiera</b></article>
-            <article className="kpi-card kpi-card--blue"><span>Retraso en hora punta</span><strong>{summary.peak.toFixed(1)}%</strong><small>Mayor franja registrada</small><b>18:00–21:00</b></article>
+            <article className="kpi-card kpi-card--blue"><span>Retraso en hora punta</span><strong>{summary.peak.toFixed(1)}%</strong><small>Mayor franja registrada</small><b>Según consulta Q5</b></article>
           </div>
 
           <div className="analytics-grid">
@@ -62,7 +63,7 @@ export function DashboardPage() {
             <article className="chart-card chart-card--wide"><header><div><span className="eyebrow">Seguridad operacional</span><h2>Incidencias de combustible por aerolínea</h2></div></header><HorizontalBars label="Incidencias por aerolínea" items={analytics.fuelIncidents.map((item) => ({ name: item.airline, amount: item.incidents }))} value={(amount) => `${amount} eventos`} /></article>
             <article className="chart-card"><header><div><span className="eyebrow">Ingresos</span><h2>Recaudación TUUA</h2></div></header><div className="revenue-list">{analytics.tuuaRevenue.map((item, index) => <div key={item.category}><i className={`revenue-dot revenue-dot--${index + 1}`} /><span>{item.category}</span><strong>{money.format(item.amount)}</strong></div>)}</div></article>
           </div>
-          <footer className="analytics-source"><span>Fuente</span><strong>MS5 Analítica · Amazon Athena</strong><small>Las visualizaciones se actualizarán automáticamente al conectar la API real.</small></footer>
+          <footer className="analytics-source"><span>Fuente</span><strong>{shouldUseMocksFor('ms5') ? 'Datos de demostración' : 'MS5 Analítica · Amazon Athena'}</strong><small>{shouldUseMocksFor('ms5') ? 'Pendiente de prueba con el servicio desplegado.' : 'Datos obtenidos en la última consulta a MS5.'}</small></footer>
         </>}
       </div>
     </section>

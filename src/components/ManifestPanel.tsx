@@ -19,9 +19,9 @@ export function ManifestPanel({ manifest, summary, onClose }: ManifestPanelProps
       </div>
 
       <div className="summary-grid">
-        <article><span>Pasajeros</span><strong>{summary.passengerCount}</strong></article>
-        <article><span>Con check-in</span><strong>{summary.checkedInCount}</strong></article>
-        <article><span>Equipaje total</span><strong>{summary.baggageKg.toFixed(1)} kg</strong></article>
+        <article><span>Pasajeros</span><strong>{summary.passengerCount ?? '—'}</strong></article>
+        <article><span>Con check-in</span><strong>{summary.checkedInCount ?? '—'}</strong></article>
+        <article><span>Equipaje total</span><strong>{summary.baggageKg === null ? '—' : `${summary.baggageKg.toFixed(1)} kg`}</strong></article>
         <article className={summary.openIncidents ? 'summary-card--alert' : ''}>
           <span>Incidencias abiertas</span><strong>{summary.openIncidents}</strong>
         </article>
@@ -37,7 +37,7 @@ export function ManifestPanel({ manifest, summary, onClose }: ManifestPanelProps
                   <td><strong>{passenger.name}</strong><small>#{passenger.id}</small></td>
                   <td>{passenger.seat}</td>
                   <td>{passenger.boardingStatus}</td>
-                  <td>{passenger.baggageKg.toFixed(1)} kg</td>
+                  <td>{passenger.baggageKg === null ? '—' : `${passenger.baggageKg.toFixed(1)} kg`}</td>
                 </tr>
               ))}
             </tbody>
@@ -45,10 +45,13 @@ export function ManifestPanel({ manifest, summary, onClose }: ManifestPanelProps
         </div>
         <aside className="manifest-resources">
           <span>Recursos asignados</span>
-          <ul>{manifest.assignedResources.map((resource) => <li key={resource}>{resource}</li>)}</ul>
+          {manifest.assignedResources.length
+            ? <ul>{manifest.assignedResources.map((resource) => <li key={resource}>{resource}</li>)}</ul>
+            : <p>No informados por MS4</p>}
           <dl><dt>Tripulación</dt><dd>{manifest.crewMembers} personas</dd></dl>
         </aside>
       </div>
+      {manifest.warnings.length > 0 && <div className="drawer-note drawer-note--error" role="status"><strong>Manifiesto parcial</strong><p>{manifest.warnings.join(' · ')}</p></div>}
     </section>
   )
 }

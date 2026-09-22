@@ -2,8 +2,8 @@ export interface ManifestPassenger {
   id: number
   name: string
   seat: string
-  boardingStatus: 'Emitido' | 'Check-in' | 'Embarcado' | 'No-show' | 'Cancelado'
-  baggageKg: number
+  boardingStatus: string
+  baggageKg: number | null
 }
 
 export interface FlightManifest {
@@ -13,12 +13,13 @@ export interface FlightManifest {
   assignedResources: string[]
   openIncidents: number
   passengers: ManifestPassenger[]
+  warnings: string[]
 }
 
 export interface ManifestSummary {
-  passengerCount: number
-  checkedInCount: number
-  baggageKg: number
+  passengerCount: number | null
+  checkedInCount: number | null
+  baggageKg: number | null
   openIncidents: number
 }
 
