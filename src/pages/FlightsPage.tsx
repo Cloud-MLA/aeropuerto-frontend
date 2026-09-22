@@ -68,7 +68,8 @@ export function FlightsPage() {
     setManifestError('')
     setManifestLoading(true)
     try {
-      const [manifestResult, summaryResult] = await Promise.all([getManifest(selected.id), getManifestSummary(selected.id)])
+      const manifestResult = await getManifest(selected.id)
+      const summaryResult = await getManifestSummary(selected.id, manifestResult)
       setManifest(manifestResult)
       setSummary(summaryResult)
     } catch (reason) {

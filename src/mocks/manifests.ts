@@ -7,6 +7,7 @@ export const mockManifests: Record<number, FlightManifest> = {
     crewMembers: 6,
     assignedResources: ['Manga B12', 'Radar L-03'],
     openIncidents: 0,
+    warnings: [],
     passengers: [
       { id: 100214, name: 'María Torres', seat: '12A', boardingStatus: 'Embarcado', baggageKg: 18.4 },
       { id: 100372, name: 'Luis Mendoza', seat: '12B', boardingStatus: 'Check-in', baggageKg: 12.1 },
@@ -19,6 +20,7 @@ export const mockManifests: Record<number, FlightManifest> = {
     crewMembers: 5,
     assignedResources: ['Manga A04'],
     openIncidents: 0,
+    warnings: [],
     passengers: [
       { id: 100512, name: 'Diego Chávez', seat: '08C', boardingStatus: 'Check-in', baggageKg: 21.3 },
       { id: 100620, name: 'Ana Salazar', seat: '09D', boardingStatus: 'Emitido', baggageKg: 15.8 },
@@ -30,6 +32,7 @@ export const mockManifests: Record<number, FlightManifest> = {
     crewMembers: 9,
     assignedResources: ['Manga C08', 'Radar S-01'],
     openIncidents: 2,
+    warnings: [],
     passengers: [
       { id: 100701, name: 'Sofía Vargas', seat: '22A', boardingStatus: 'Check-in', baggageKg: 23.0 },
       { id: 100804, name: 'Jorge Paredes', seat: '24C', boardingStatus: 'No-show', baggageKg: 0 },
@@ -43,7 +46,7 @@ export function summarizeManifest(manifest: FlightManifest): ManifestSummary {
     checkedInCount: manifest.passengers.filter(({ boardingStatus }) =>
       ['Check-in', 'Embarcado'].includes(boardingStatus),
     ).length,
-    baggageKg: manifest.passengers.reduce((total, passenger) => total + passenger.baggageKg, 0),
+    baggageKg: manifest.passengers.reduce((total, passenger) => total + (passenger.baggageKg ?? 0), 0),
     openIncidents: manifest.openIncidents,
   }
 }
