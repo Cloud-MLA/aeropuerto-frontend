@@ -88,11 +88,11 @@ VITE_MS5_OPENAPI_URL=https://<host>/api/analitica/openapi.json
 | Infraestructura | PATCH | `/api/infra/recursos/{id}/estado` | MS3 | Actualiza disponibilidad |
 | Infraestructura | GET | `/api/infra/incidencias` | MS3 | Lista incidencias |
 | Infraestructura | POST | `/api/infra/incidencias` | MS3 | Registra una incidencia |
-| Analítica | GET | `/api/analitica/analitica/recursos-mas-fallas?dias=7` | MS5 | Indicador Q1 |
-| Analítica | GET | `/api/analitica/analitica/retraso-promedio?tipo=Internacional` | MS5 | Indicador Q2 |
-| Analítica | GET | `/api/analitica/analitica/incidencias-combustible-por-aerolinea` | MS5 | Indicador Q3 |
-| Analítica | GET | `/api/analitica/analitica/recaudacion-tuua-por-categoria` | MS5 | Vista de recaudación |
-| Analítica | GET | `/api/analitica/analitica/vuelos-hora-punta-retrasados` | MS5 | Vista de retrasos |
+| Analítica | GET | `/api/analitica/recursos-mas-fallas?dias=7` | MS5 | Indicador Q1 |
+| Analítica | GET | `/api/analitica/retraso-promedio?tipo=Internacional` | MS5 | Indicador Q2 |
+| Analítica | GET | `/api/analitica/incidencias-combustible-por-aerolinea` | MS5 | Indicador Q3 |
+| Analítica | GET | `/api/analitica/recaudacion-tuua-por-categoria` | MS5 | Vista de recaudación |
+| Analítica | GET | `/api/analitica/vuelos-hora-punta-retrasados` | MS5 | Vista de retrasos |
 
 > Las rutas reflejan el contrato usado actualmente por el frontend. Antes del despliegue final deben compararse con las rutas publicadas por API Gateway y los OpenAPI definitivos.
 
