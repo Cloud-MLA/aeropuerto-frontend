@@ -18,7 +18,7 @@ export function InfrastructurePage() {
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
   const [title, setTitle] = useState('')
-  const [type, setType] = useState('Falla_Operativa')
+  const [type, setType] = useState('Otro')
   const [severity, setSeverity] = useState<IncidentSeverity>('Moderada')
   const [description, setDescription] = useState('')
   const [flightId, setFlightId] = useState('')
