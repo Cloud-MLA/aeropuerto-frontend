@@ -1,5 +1,5 @@
 import { type CSSProperties, useEffect, useMemo, useState } from 'react'
-import { getCrisisAnalytics } from '../api/analytics'
+import { getCachedCrisisAnalytics, getCrisisAnalytics } from '../api/analytics'
 import { shouldUseMocksFor } from '../api/client'
 import { StatePanel } from '../components/StatePanel'
 import type { CrisisAnalytics } from '../types/analytics'
@@ -12,14 +12,14 @@ function HorizontalBars({ items, value, label }: { items: Array<{ name: string; 
 }
 
 export function DashboardPage() {
-  const [analytics, setAnalytics] = useState<CrisisAnalytics | null>(null)
-  const [loading, setLoading] = useState(true)
+  const [analytics, setAnalytics] = useState<CrisisAnalytics | null>(() => getCachedCrisisAnalytics() ?? null)
+  const [loading, setLoading] = useState(() => !getCachedCrisisAnalytics())
   const [error, setError] = useState('')
   const [updatedAt, setUpdatedAt] = useState(new Date())
 
   async function load() {
     setLoading(true); setError('')
-    try { setAnalytics(await getCrisisAnalytics()); setUpdatedAt(new Date()) }
+    try { setAnalytics(await getCrisisAnalytics(true)); setUpdatedAt(new Date()) }
     catch (reason) { setError(reason instanceof Error ? reason.message : 'No se pudieron obtener los indicadores analíticos.') }
     finally { setLoading(false) }
   }

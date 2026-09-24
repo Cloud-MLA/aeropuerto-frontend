@@ -1,22 +1,23 @@
 import { type FormEvent, useEffect, useMemo, useState } from 'react'
-import { listFlights } from '../api/flights'
-import { checkInTicket, issueTicket, listMigrationCategories } from '../api/tickets'
+import { getCachedFlights, listFlights } from '../api/flights'
+import { checkInTicket, getCachedMigrationCategories, issueTicket, listMigrationCategories } from '../api/tickets'
 import { StatePanel } from '../components/StatePanel'
 import type { Flight } from '../types/flight'
 import type { MigrationCategory, Ticket } from '../types/ticket'
 
 export function TicketsPage() {
-  const [flights, setFlights] = useState<Flight[]>([])
-  const [categories, setCategories] = useState<MigrationCategory[]>([])
+  const [flights, setFlights] = useState<Flight[]>(() => (getCachedFlights() ?? []).filter((flight) => flight.status !== 'Cancelado'))
+  const [categories, setCategories] = useState<MigrationCategory[]>(() => getCachedMigrationCategories() ?? [])
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
   const [birthDate, setBirthDate] = useState('')
   const [documentType, setDocumentType] = useState('DNI')
   const [documentNumber, setDocumentNumber] = useState('')
   const [flightId, setFlightId] = useState('')
+  const [flightQuery, setFlightQuery] = useState('')
   const [categoryId, setCategoryId] = useState('')
   const [ticket, setTicket] = useState<Ticket | null>(null)
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(() => !getCachedFlights() || !getCachedMigrationCategories())
   const [submitting, setSubmitting] = useState(false)
   const [checkingIn, setCheckingIn] = useState(false)
   const [error, setError] = useState('')
@@ -32,6 +33,12 @@ export function TicketsPage() {
   }, [])
 
   const selectedFlight = useMemo(() => flights.find((flight) => flight.id === Number(flightId)), [flightId, flights])
+  const flightOptions = useMemo(() => {
+    const term = flightQuery.trim().toLowerCase()
+    const matches = flights.filter((flight) => !term || `${flight.number} ${flight.origin} ${flight.destination}`.toLowerCase().includes(term)).slice(0, 100)
+    if (selectedFlight && !matches.some((flight) => flight.id === selectedFlight.id)) matches.unshift(selectedFlight)
+    return matches
+  }, [flights, flightQuery, selectedFlight])
   const selectedCategory = useMemo(() => categories.find((category) => category.id === Number(categoryId)), [categories, categoryId])
 
   async function submit(event: FormEvent<HTMLFormElement>) {
@@ -64,6 +71,7 @@ export function TicketsPage() {
     setBirthDate('')
     setDocumentNumber('')
     setFlightId('')
+    setFlightQuery('')
     setCategoryId('')
     setTicket(null)
     setError('')
@@ -90,7 +98,8 @@ export function TicketsPage() {
                 <label className="field"><span>Fecha de nacimiento</span><input required type="date" max={new Date().toISOString().slice(0, 10)} value={birthDate} onChange={(event) => setBirthDate(event.target.value)} /></label>
                 <label className="field"><span>Tipo de documento</span><select value={documentType} onChange={(event) => setDocumentType(event.target.value)}><option>DNI</option><option>Pasaporte</option><option>CE</option></select></label>
                 <label className="field field--wide"><span>Número de documento</span><input required minLength={6} maxLength={15} value={documentNumber} onChange={(event) => setDocumentNumber(event.target.value)} placeholder="Documento del pasajero" /></label>
-                <label className="field field--wide"><span>Vuelo disponible</span><select required value={flightId} onChange={(event) => setFlightId(event.target.value)}><option value="">Selecciona un vuelo</option>{flights.map((flight) => <option key={flight.id} value={flight.id}>{flight.number} · {flight.origin} → {flight.destination} · {flight.gate}</option>)}</select></label>
+                <label className="field field--wide"><span>Buscar vuelo</span><input value={flightQuery} onChange={(event) => setFlightQuery(event.target.value)} placeholder="Número de vuelo, origen o destino" /></label>
+                <label className="field field--wide"><span>Vuelo disponible</span><select required value={flightId} onChange={(event) => setFlightId(event.target.value)}><option value="">Selecciona un vuelo</option>{flightOptions.map((flight) => <option key={flight.id} value={flight.id}>{flight.number} · {flight.origin} → {flight.destination} · {flight.gate}</option>)}</select><small>Se muestran hasta 100 resultados. Usa la búsqueda para encontrar otro vuelo.</small></label>
                 <label className="field field--wide"><span>Categoría migratoria</span><select required value={categoryId} onChange={(event) => setCategoryId(event.target.value)}><option value="">Selecciona una categoría</option>{categories.map((category) => <option key={category.id} value={category.id}>{category.name} · TUUA US$ {category.tuua.toFixed(2)}</option>)}</select></label>
               </div>
               <div className="form-summary"><div><span>Vuelo</span><strong>{selectedFlight?.number ?? 'Por seleccionar'}</strong><small>{selectedFlight ? `${selectedFlight.origin} → ${selectedFlight.destination}` : 'Selecciona una operación disponible'}</small></div><div><span>Categoría</span><strong>{selectedCategory?.name ?? 'Por seleccionar'}</strong><small>{selectedCategory?.description ?? 'Define la condición migratoria'}</small></div><div><span>Tasa TUUA</span><strong>{selectedCategory ? `US$ ${selectedCategory.tuua.toFixed(2)}` : '—'}</strong><small>Calculada según categoría</small></div></div>

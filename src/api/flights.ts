@@ -1,6 +1,7 @@
 import { mockFlights } from '../mocks/flights'
 import type { Flight } from '../types/flight'
 import { request, shouldUseMocksFor } from './client'
+import { createResourceCache } from './resourceCache'
 
 interface Ms2Flight {
   id: number
@@ -49,7 +50,7 @@ async function getAirlineMap(): Promise<Map<string, string>> {
 const delay = (milliseconds: number) =>
   new Promise((resolve) => window.setTimeout(resolve, milliseconds))
 
-export async function listFlights(): Promise<Flight[]> {
+async function loadFlights(): Promise<Flight[]> {
   if (shouldUseMocksFor('ms2')) {
     await delay(450)
     return mockFlights
@@ -61,6 +62,11 @@ export async function listFlights(): Promise<Flight[]> {
   ])
   return flights.map((flight) => toFlight(flight, airlines))
 }
+
+const flightsCache = createResourceCache(loadFlights, 60_000)
+
+export const listFlights = flightsCache.get
+export const getCachedFlights = flightsCache.peek
 
 export async function getFlight(id: number): Promise<Flight> {
   if (shouldUseMocksFor('ms2')) {
@@ -84,7 +90,9 @@ export async function updateFlightStatus(id: number, status: Flight['status']): 
     if (!flight) throw new Error('No se encontró el vuelo seleccionado.')
     flight.status = status
     flight.actualAt = status === 'Despegado' ? new Date().toISOString() : flight.actualAt
-    return { ...flight }
+    const updated = { ...flight }
+    flightsCache.update((items) => items.map((item) => item.id === id ? updated : item))
+    return updated
   }
 
   const [flight, airlines] = await Promise.all([
@@ -94,6 +102,8 @@ export async function updateFlightStatus(id: number, status: Flight['status']): 
     }),
     getAirlineMap(),
   ])
-  return toFlight(flight, airlines)
+  const updated = toFlight(flight, airlines)
+  flightsCache.update((items) => items.map((item) => item.id === id ? updated : item))
+  return updated
 }
 

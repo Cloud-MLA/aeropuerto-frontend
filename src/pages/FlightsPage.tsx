@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { getFlight, listFlights, updateFlightStatus } from '../api/flights'
+import { getCachedFlights, getFlight, listFlights, updateFlightStatus } from '../api/flights'
 import { getManifest, getManifestSummary } from '../api/manifests'
 import { ManifestPanel } from '../components/ManifestPanel'
 import { StatePanel } from '../components/StatePanel'
@@ -9,6 +9,8 @@ import type { FlightStatus } from '../types/flight'
 import type { FlightManifest, ManifestSummary } from '../types/manifest'
 
 const statuses = ['Todos', 'Programado', 'Embarcando', 'Despegado', 'Aterrizado', 'Retrasado', 'Cancelado']
+const pageSize = 50
+const flightTime = new Intl.DateTimeFormat('es-PE', { hour: '2-digit', minute: '2-digit' })
 const transitions: Record<FlightStatus, FlightStatus[]> = {
   Programado: ['Embarcando', 'Retrasado', 'Cancelado'],
   Embarcando: ['Despegado', 'Retrasado', 'Cancelado'],
@@ -19,12 +21,13 @@ const transitions: Record<FlightStatus, FlightStatus[]> = {
 }
 
 export function FlightsPage() {
-  const [flights, setFlights] = useState<Flight[]>([])
+  const [flights, setFlights] = useState<Flight[]>(() => getCachedFlights() ?? [])
   const [selected, setSelected] = useState<Flight | null>(null)
   const [query, setQuery] = useState('')
   const [airline, setAirline] = useState('Todas')
   const [status, setStatus] = useState('Todos')
-  const [loading, setLoading] = useState(true)
+  const [page, setPage] = useState(1)
+  const [loading, setLoading] = useState(() => !getCachedFlights())
   const [manifestLoading, setManifestLoading] = useState(false)
   const [error, setError] = useState('')
   const [manifest, setManifest] = useState<FlightManifest | null>(null)
@@ -53,6 +56,9 @@ export function FlightsPage() {
       return matchesQuery && (airline === 'Todas' || flight.airline === airline) && (status === 'Todos' || flight.status === status)
     })
   }, [flights, query, airline, status])
+  const pageCount = Math.max(1, Math.ceil(filteredFlights.length / pageSize))
+  const currentPage = Math.min(page, pageCount)
+  const visibleFlights = useMemo(() => filteredFlights.slice((currentPage - 1) * pageSize, currentPage * pageSize), [filteredFlights, currentPage])
 
   async function selectFlight(id: number) {
     setError('')
@@ -99,6 +105,7 @@ export function FlightsPage() {
     setQuery('')
     setAirline('Todas')
     setStatus('Todos')
+    setPage(1)
   }
 
   return (
@@ -119,9 +126,9 @@ export function FlightsPage() {
         </div>
 
         <div className="filters-bar">
-          <label className="search search--wide"><span>⌕</span><input aria-label="Buscar vuelo" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar por número de vuelo, aerolínea, origen o destino…" /></label>
-          <label><span>Aerolínea</span><select value={airline} onChange={(event) => setAirline(event.target.value)}>{airlines.map((item) => <option key={item}>{item}</option>)}</select></label>
-          <label><span>Estado</span><select value={status} onChange={(event) => setStatus(event.target.value)}>{statuses.map((item) => <option key={item}>{item}</option>)}</select></label>
+          <label className="search search--wide"><span>⌕</span><input aria-label="Buscar vuelo" value={query} onChange={(event) => { setQuery(event.target.value); setPage(1) }} placeholder="Buscar por número de vuelo, aerolínea, origen o destino…" /></label>
+          <label><span>Aerolínea</span><select value={airline} onChange={(event) => { setAirline(event.target.value); setPage(1) }}>{airlines.map((item) => <option key={item}>{item}</option>)}</select></label>
+          <label><span>Estado</span><select value={status} onChange={(event) => { setStatus(event.target.value); setPage(1) }}>{statuses.map((item) => <option key={item}>{item}</option>)}</select></label>
           <button className="clear-action" onClick={clearFilters}>Limpiar</button>
         </div>
 
@@ -134,9 +141,9 @@ export function FlightsPage() {
               <div className="flight-table-wrap">
                 <table className="flight-table">
                   <thead><tr><th>Hora</th><th>Vuelo</th><th>Aerolínea</th><th>Origen</th><th>Destino</th><th>Puerta</th><th>Estado</th><th aria-label="Acciones" /></tr></thead>
-                  <tbody>{filteredFlights.map((flight) => (
+                  <tbody>{visibleFlights.map((flight) => (
                     <tr key={flight.id} className={selected?.id === flight.id ? 'is-selected' : ''} onClick={() => void selectFlight(flight.id)}>
-                      <td><strong>{new Intl.DateTimeFormat('es-PE', { hour: '2-digit', minute: '2-digit' }).format(new Date(flight.scheduledAt))}</strong></td>
+                      <td><strong>{flightTime.format(new Date(flight.scheduledAt))}</strong></td>
                       <td><strong>{flight.number}</strong></td><td>{flight.airline}</td><td>{flight.origin}</td><td>{flight.destination}</td><td>{flight.gate}</td>
                       <td><StatusBadge status={flight.status} /></td><td><button className="view-action" aria-label={`Ver ${flight.number}`}>◉</button></td>
                     </tr>
@@ -144,7 +151,7 @@ export function FlightsPage() {
                 </table>
               </div>
               {filteredFlights.length === 0 && <StatePanel eyebrow="Sin resultados" title="No encontramos vuelos" message="Prueba limpiando o modificando los filtros." />}
-              <footer className="table-footer"><span>Mostrando {filteredFlights.length} de {flights.length} vuelos</span><div><button disabled>‹</button><button className="active">1</button><button disabled>›</button></div></footer>
+              <footer className="table-footer"><span>Mostrando {visibleFlights.length} de {filteredFlights.length} vuelos ({flights.length} en total)</span><div><button aria-label="Página anterior" disabled={currentPage === 1} onClick={() => setPage(currentPage - 1)}>‹</button><button className="active" aria-label={`Página ${currentPage} de ${pageCount}`} disabled>{currentPage} / {pageCount}</button><button aria-label="Página siguiente" disabled={currentPage === pageCount} onClick={() => setPage(currentPage + 1)}>›</button></div></footer>
             </div>
 
             <aside className="flight-drawer">

@@ -1,11 +1,12 @@
 import { checkInMockTicket, createMockTicket, mockMigrationCategories } from '../mocks/tickets'
 import type { MigrationCategory, Ticket, TicketDraft } from '../types/ticket'
 import { request, shouldUseMocksFor } from './client'
+import { createResourceCache } from './resourceCache'
 
 const delay = (milliseconds: number) =>
   new Promise((resolve) => window.setTimeout(resolve, milliseconds))
 
-export async function listMigrationCategories(): Promise<MigrationCategory[]> {
+async function loadMigrationCategories(): Promise<MigrationCategory[]> {
   if (shouldUseMocksFor('ms1')) {
     await delay(250)
     return mockMigrationCategories
@@ -13,6 +14,11 @@ export async function listMigrationCategories(): Promise<MigrationCategory[]> {
   const categories = await request<Array<{ id: number; nombre: string; tarifa: number }>>('/api/pasajeros/categorias-migratorias')
   return categories.map((category) => ({ id: category.id, name: category.nombre, description: `Categoría migratoria ${category.nombre}`, tuua: category.tarifa }))
 }
+
+const categoriesCache = createResourceCache(loadMigrationCategories, 60_000)
+
+export const listMigrationCategories = categoriesCache.get
+export const getCachedMigrationCategories = categoriesCache.peek
 
 export async function issueTicket(draft: TicketDraft): Promise<Ticket> {
   if (shouldUseMocksFor('ms1')) {
