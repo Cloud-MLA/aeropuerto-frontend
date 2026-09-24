@@ -77,8 +77,8 @@ VITE_MS5_OPENAPI_URL=https://<host>/api/analitica/openapi.json
 | Operaciones | GET | `/api/vuelos` | MS2 | Lista y filtra vuelos |
 | Operaciones | GET | `/api/vuelos/{id}` | MS2 | Consulta el detalle |
 | Operaciones | PATCH | `/api/vuelos/{id}/estado` | MS2 | Ejecuta una transición válida |
-| Manifiesto | GET | `/api/manifiesto/manifiesto/{id}` | MS4 | Consolida vuelo, tickets, tripulación e incidencias |
-| Manifiesto | GET | `/api/manifiesto/manifiesto/{id}/resumen` | MS4 | Obtiene contadores operacionales |
+| Manifiesto | GET | `/api/manifiesto/{id}` | MS4 | Consolida vuelo, tickets, tripulación e incidencias |
+| Manifiesto | GET | `/api/manifiesto/{id}/resumen` | MS4 | Obtiene contadores operacionales |
 | Tickets | GET | `/api/pasajeros/categorias-migratorias` | MS1 | Carga categorías y TUUA |
 | Tickets | GET | `/api/pasajeros/pasajeros?tipo_documento=&numero_documento=` | MS1 | Localiza un pasajero existente |
 | Tickets | POST | `/api/pasajeros/pasajeros` | MS1 | Registra al pasajero cuando no existe |

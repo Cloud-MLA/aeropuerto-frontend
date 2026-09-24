@@ -14,7 +14,7 @@ export async function getManifest(flightId: number): Promise<FlightManifest> {
     return manifest
   }
 
-  return adaptManifest(await request<unknown>(`/api/manifiesto/manifiesto/${flightId}`))
+  return adaptManifest(await request<unknown>(`/api/manifiesto/${flightId}`))
 }
 
 export async function getManifestSummary(flightId: number, manifest: FlightManifest): Promise<ManifestSummary> {
@@ -25,6 +25,6 @@ export async function getManifestSummary(flightId: number, manifest: FlightManif
     return summarizeManifest(manifest)
   }
 
-  return adaptManifestSummary(await request<unknown>(`/api/manifiesto/manifiesto/${flightId}/resumen`), manifest)
+  return adaptManifestSummary(await request<unknown>(`/api/manifiesto/${flightId}/resumen`), manifest)
 }
 
