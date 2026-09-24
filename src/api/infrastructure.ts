@@ -67,7 +67,13 @@ export async function listResources(status?: ResourceStatus): Promise<AirportRes
 export const listIncidents = incidentsCache.get
 
 export async function createIncident(draft: IncidentDraft): Promise<Incident> {
-  if (shouldUseMocksFor('ms3')) { await delay(550); const created = createMockIncident(draft); incidentsCache.invalidate(); resourcesCache.invalidate(); return created }
+  if (shouldUseMocksFor('ms3')) {
+    await delay(550)
+    const created = createMockIncident(draft)
+    incidentsCache.update((items) => [created, ...items])
+    resourcesCache.update((items) => items.map((item) => item.id === draft.resourceId ? { ...item, status: 'Fuera de servicio' } : item))
+    return created
+  }
   const payload = {
     id: Math.floor(Date.now() / 1000),
     gravedad: draft.severity,
@@ -79,9 +85,10 @@ export async function createIncident(draft: IncidentDraft): Promise<Incident> {
     retrasa_vuelos: draft.flightId ? [{ vuelo_id: draft.flightId }] : [],
   }
   const response = await request<{ datos: BackendIncident }>('/api/infra/incidencias', { method: 'POST', body: JSON.stringify(payload) })
-  incidentsCache.invalidate()
-  resourcesCache.invalidate()
-  return mapIncident(response.datos)
+  const created = mapIncident(response.datos)
+  incidentsCache.update((items) => [created, ...items])
+  resourcesCache.update((items) => items.map((item) => item.id === draft.resourceId ? { ...item, status: 'Fuera de servicio' } : item))
+  return created
 }
 
 export async function updateResourceStatus(resource: AirportResource, status: ResourceStatus): Promise<AirportResource> {
