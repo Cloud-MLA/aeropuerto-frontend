@@ -6,7 +6,6 @@ import { createResourceCache } from './resourceCache'
 const delay = (milliseconds: number) => new Promise((resolve) => window.setTimeout(resolve, milliseconds))
 
 interface BackendResource {
-  _id?: string
   id: number
   nombre_tecnico_locacion: string
   tipo: 'manga' | 'radar'
@@ -34,7 +33,7 @@ function toFrontendStatus(resource: BackendResource): ResourceStatus {
 
 function mapResource(resource: BackendResource): AirportResource {
   const prefix = resource.tipo === 'manga' ? 'MGA' : 'RDR'
-  return { backendId: resource._id, id: resource.id, code: `${prefix}-${String(resource.id).padStart(2, '0')}`, name: resource.nombre_tecnico_locacion, type: resource.tipo === 'manga' ? 'Manga' : 'Radar', zone: resource.nombre_tecnico_locacion, status: toFrontendStatus(resource) }
+  return { id: resource.id, code: `${prefix}-${String(resource.id).padStart(2, '0')}`, name: resource.nombre_tecnico_locacion, type: resource.tipo === 'manga' ? 'Manga' : 'Radar', zone: resource.nombre_tecnico_locacion, status: toFrontendStatus(resource) }
 }
 
 function mapIncident(incident: BackendIncident): Incident {
@@ -95,7 +94,7 @@ export async function updateResourceStatus(resource: AirportResource, status: Re
   if (shouldUseMocksFor('ms3')) { await delay(400); const updated = updateMockResource(resource.id, status); resourcesCache.update((items) => items.map((item) => item.id === updated.id ? updated : item)); return updated }
   const backendStatus = status === 'Fuera de servicio' ? 'Inoperativa' : status
   const body = resource.type === 'Manga' ? { manga: { estado_acople: backendStatus } } : { radar: { estado_radar: backendStatus } }
-  const response = await request<{ datos: BackendResource }>(`/api/infra/recursos/${resource.backendId ?? resource.id}/estado`, { method: 'PATCH', body: JSON.stringify(body) })
+  const response = await request<{ datos: BackendResource }>(`/api/infra/recursos/${resource.id}/estado`, { method: 'PATCH', body: JSON.stringify(body) })
   const updated = mapResource(response.datos)
   resourcesCache.update((items) => items.map((item) => item.id === updated.id ? updated : item))
   return updated

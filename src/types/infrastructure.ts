@@ -2,7 +2,6 @@ export type ResourceStatus = 'Libre' | 'Ocupado' | 'Mantenimiento' | 'Fuera de s
 export type IncidentSeverity = 'Leve' | 'Moderada' | 'Alta' | 'Critica'
 
 export interface AirportResource {
-  backendId?: string
   id: number
   code: string
   name: string
