@@ -1,6 +1,7 @@
 import { createMockIncident, getMockIncidents, getMockResources, updateMockResource } from '../mocks/infrastructure'
 import type { AirportResource, Incident, IncidentDraft, ResourceStatus } from '../types/infrastructure'
 import { request, shouldUseMocksFor } from './client'
+import { createResourceCache } from './resourceCache'
 
 const delay = (milliseconds: number) => new Promise((resolve) => window.setTimeout(resolve, milliseconds))
 
@@ -42,21 +43,31 @@ function mapIncident(incident: BackendIncident): Incident {
   return { id: incident.id, title: incident.tipo_incidencia.replaceAll('_', ' '), type: incident.tipo_incidencia, severity: incident.gravedad, description: incident.descripcion, resourceId, resourceCode: resourceId ? `REC-${resourceId}` : 'Sin recurso', flightId, status: incident.fecha_cierre ? 'Cerrada' : 'Abierta', reportedAt: incident.fecha_reporte }
 }
 
-export async function listResources(status?: ResourceStatus): Promise<AirportResource[]> {
-  if (shouldUseMocksFor('ms3')) { await delay(350); return getMockResources(status) }
-  const query = status ? `?estado=${encodeURIComponent(status)}` : ''
-  const resources = await request<BackendResource[]>(`/api/infra/recursos${query}`)
+async function loadResources(): Promise<AirportResource[]> {
+  if (shouldUseMocksFor('ms3')) { await delay(350); return getMockResources() }
+  const resources = await request<BackendResource[]>('/api/infra/recursos')
   return resources.map(mapResource)
 }
 
-export async function listIncidents(): Promise<Incident[]> {
+async function loadIncidents(): Promise<Incident[]> {
   if (shouldUseMocksFor('ms3')) { await delay(300); return getMockIncidents() }
   const incidents = await request<BackendIncident[]>('/api/infra/incidencias')
   return incidents.map(mapIncident)
 }
 
+const resourcesCache = createResourceCache(loadResources, 60_000)
+const incidentsCache = createResourceCache(loadIncidents, 60_000)
+
+export const getCachedResources = resourcesCache.peek
+export const getCachedIncidents = incidentsCache.peek
+export async function listResources(status?: ResourceStatus): Promise<AirportResource[]> {
+  const resources = await resourcesCache.get()
+  return status ? resources.filter((resource) => resource.status === status) : resources
+}
+export const listIncidents = incidentsCache.get
+
 export async function createIncident(draft: IncidentDraft): Promise<Incident> {
-  if (shouldUseMocksFor('ms3')) { await delay(550); return createMockIncident(draft) }
+  if (shouldUseMocksFor('ms3')) { await delay(550); const created = createMockIncident(draft); incidentsCache.invalidate(); resourcesCache.invalidate(); return created }
   const payload = {
     id: Math.floor(Date.now() / 1000),
     gravedad: draft.severity,
@@ -68,13 +79,17 @@ export async function createIncident(draft: IncidentDraft): Promise<Incident> {
     retrasa_vuelos: draft.flightId ? [{ vuelo_id: draft.flightId }] : [],
   }
   const response = await request<{ datos: BackendIncident }>('/api/infra/incidencias', { method: 'POST', body: JSON.stringify(payload) })
+  incidentsCache.invalidate()
+  resourcesCache.invalidate()
   return mapIncident(response.datos)
 }
 
 export async function updateResourceStatus(resource: AirportResource, status: ResourceStatus): Promise<AirportResource> {
-  if (shouldUseMocksFor('ms3')) { await delay(400); return updateMockResource(resource.id, status) }
+  if (shouldUseMocksFor('ms3')) { await delay(400); const updated = updateMockResource(resource.id, status); resourcesCache.update((items) => items.map((item) => item.id === updated.id ? updated : item)); return updated }
   const backendStatus = status === 'Fuera de servicio' ? 'Inoperativa' : status
   const body = resource.type === 'Manga' ? { manga: { estado_acople: backendStatus } } : { radar: { estado_radar: backendStatus } }
   const response = await request<{ datos: BackendResource }>(`/api/infra/recursos/${resource.backendId ?? resource.id}/estado`, { method: 'PATCH', body: JSON.stringify(body) })
-  return mapResource(response.datos)
+  const updated = mapResource(response.datos)
+  resourcesCache.update((items) => items.map((item) => item.id === updated.id ? updated : item))
+  return updated
 }

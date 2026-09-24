@@ -1,5 +1,5 @@
 import { type FormEvent, useEffect, useMemo, useState } from 'react'
-import { createIncident, listIncidents, listResources, updateResourceStatus } from '../api/infrastructure'
+import { createIncident, getCachedIncidents, getCachedResources, listIncidents, listResources, updateResourceStatus } from '../api/infrastructure'
 import { StatePanel } from '../components/StatePanel'
 import type { AirportResource, Incident, IncidentSeverity, ResourceStatus } from '../types/infrastructure'
 
@@ -7,11 +7,11 @@ const statuses: Array<'Todos' | ResourceStatus> = ['Todos', 'Libre', 'Ocupado', 
 const statusClass = (status: ResourceStatus) => status.toLowerCase().replaceAll(' ', '-')
 
 export function InfrastructurePage() {
-  const [resources, setResources] = useState<AirportResource[]>([])
-  const [incidents, setIncidents] = useState<Incident[]>([])
+  const [resources, setResources] = useState<AirportResource[]>(() => getCachedResources() ?? [])
+  const [incidents, setIncidents] = useState<Incident[]>(() => getCachedIncidents() ?? [])
   const [filter, setFilter] = useState<(typeof statuses)[number]>('Todos')
-  const [selectedId, setSelectedId] = useState<number | null>(null)
-  const [loading, setLoading] = useState(true)
+  const [selectedId, setSelectedId] = useState<number | null>(() => getCachedResources()?.[0]?.id ?? null)
+  const [loading, setLoading] = useState(() => !getCachedResources() || !getCachedIncidents())
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
