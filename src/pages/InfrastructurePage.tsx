@@ -4,6 +4,7 @@ import { StatePanel } from '../components/StatePanel'
 import type { AirportResource, Incident, IncidentSeverity, ResourceStatus } from '../types/infrastructure'
 
 const statuses: Array<'Todos' | ResourceStatus> = ['Todos', 'Libre', 'Ocupado', 'Mantenimiento', 'Fuera de servicio']
+const incidentsPerPage = 30
 const statusClass = (status: ResourceStatus) => status.toLowerCase().replaceAll(' ', '-')
 
 export function InfrastructurePage() {
@@ -11,6 +12,7 @@ export function InfrastructurePage() {
   const [incidents, setIncidents] = useState<Incident[]>(() => getCachedIncidents() ?? [])
   const [filter, setFilter] = useState<(typeof statuses)[number]>('Todos')
   const [selectedId, setSelectedId] = useState<number | null>(() => getCachedResources()?.[0]?.id ?? null)
+  const [incidentPage, setIncidentPage] = useState(1)
   const [loading, setLoading] = useState(() => !getCachedResources() || !getCachedIncidents())
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
@@ -34,6 +36,9 @@ export function InfrastructurePage() {
 
   const visibleResources = useMemo(() => resources.filter((resource) => filter === 'Todos' || resource.status === filter), [filter, resources])
   const selected = resources.find((resource) => resource.id === selectedId) ?? null
+  const incidentPageCount = Math.max(1, Math.ceil(incidents.length / incidentsPerPage))
+  const currentIncidentPage = Math.min(incidentPage, incidentPageCount)
+  const visibleIncidents = useMemo(() => incidents.slice((currentIncidentPage - 1) * incidentsPerPage, currentIncidentPage * incidentsPerPage), [incidents, currentIncidentPage])
   const metrics = useMemo(() => ({
     total: resources.length,
     free: resources.filter((item) => item.status === 'Libre').length,
@@ -59,6 +64,7 @@ export function InfrastructurePage() {
     try {
       const created = await createIncident({ title: title.trim(), type, severity, description: description.trim(), resourceId: selected.id, flightId: flightId ? Number(flightId) : undefined })
       setIncidents((items) => [created, ...items])
+      setIncidentPage(1)
       setResources((items) => items.map((item) => item.id === selected.id ? { ...item, status: 'Fuera de servicio' } : item))
       setTitle(''); setDescription(''); setFlightId('')
       setNotice(`Incidencia #${created.id} registrada correctamente.`)
@@ -79,7 +85,7 @@ export function InfrastructurePage() {
             <div className="resource-card"><div className="resource-table-wrap"><table><thead><tr><th>Código</th><th>Recurso</th><th>Zona</th><th>Estado</th></tr></thead><tbody>{visibleResources.map((resource) => <tr key={resource.id} className={resource.id === selectedId ? 'is-selected' : ''} onClick={() => setSelectedId(resource.id)}><td><strong>{resource.code}</strong></td><td>{resource.name}<small>{resource.type}</small></td><td>{resource.zone}</td><td><span className={`resource-status resource-status--${statusClass(resource.status)}`}>{resource.status}</span></td></tr>)}</tbody></table></div>{visibleResources.length === 0 && <StatePanel eyebrow="Sin resultados" title="No hay recursos" message="Cambia el filtro para consultar otro estado." />}</div>
             <aside className="resource-detail">{selected ? <><div className="resource-detail__heading"><div><span>{selected.type}</span><h2>{selected.code}</h2></div><span className={`resource-status resource-status--${statusClass(selected.status)}`}>{selected.status}</span></div><h3>{selected.name}</h3><dl><div><dt>Zona</dt><dd>{selected.zone}</dd></div><div><dt>Última inspección</dt><dd>{selected.lastInspection ? new Intl.DateTimeFormat('es-PE', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(selected.lastInspection)) : 'Sin registro en MS3'}</dd></div></dl><label className="field"><span>Cambiar estado operativo</span><select disabled={saving} value={selected.status} onChange={(event) => void changeStatus(event.target.value as ResourceStatus)}>{statuses.slice(1).map((status) => <option key={status}>{status}</option>)}</select></label><form className="incident-form" onSubmit={(event) => void submitIncident(event)}><div><span className="eyebrow">Nueva incidencia</span><h3>Registrar evento</h3></div><label className="field"><span>Título</span><input required value={title} onChange={(event) => setTitle(event.target.value)} placeholder="Descripción breve" /></label><div className="incident-form__row"><label className="field"><span>Tipo</span><select value={type} onChange={(event) => setType(event.target.value)}><option>Falla_Radar</option><option>Inundacion</option><option>Falta_Combustible</option><option>Saturacion_Vial</option><option>Manga_Inoperativa</option><option>Otro</option></select></label><label className="field"><span>Severidad</span><select value={severity} onChange={(event) => setSeverity(event.target.value as IncidentSeverity)}><option>Leve</option><option>Moderada</option><option>Alta</option><option>Critica</option></select></label></div><label className="field"><span>Vuelo relacionado (opcional)</span><input inputMode="numeric" value={flightId} onChange={(event) => setFlightId(event.target.value)} placeholder="Ej. 1841" /></label><label className="field"><span>Detalle</span><textarea required value={description} onChange={(event) => setDescription(event.target.value)} placeholder="Describe el evento observado" /></label><button className="primary-action" disabled={saving}>{saving ? 'Registrando…' : 'Registrar incidencia →'}</button></form></> : <StatePanel eyebrow="Detalle" title="Selecciona un recurso" message="Consulta o actualiza su estado operativo." />}</aside>
           </div>
-          <section className="incident-history"><header><div><span className="eyebrow">Seguimiento</span><h2>Incidencias recientes</h2></div><span>{incidents.length} registros</span></header><div className="incident-list">{incidents.map((incident) => <article key={incident.id}><span className={`severity severity--${incident.severity.toLowerCase()}`}>{incident.severity}</span><div><strong>#{incident.id} · {incident.title}</strong><small>{incident.resourceCode}{incident.flightId ? ` · Vuelo ${incident.flightId}` : ''}</small></div><p>{incident.description}</p><time>{new Intl.DateTimeFormat('es-PE', { dateStyle: 'short', timeStyle: 'short' }).format(new Date(incident.reportedAt))}</time></article>)}</div></section>
+          <section className="incident-history"><header><div><span className="eyebrow">Seguimiento</span><h2>Incidencias recientes</h2></div><span>{incidents.length} registros</span></header><div className="incident-list">{visibleIncidents.map((incident) => <article key={incident.id}><span className={`severity severity--${incident.severity.toLowerCase()}`}>{incident.severity}</span><div><strong>#{incident.id} · {incident.title}</strong><small>{incident.resourceCode}{incident.flightId ? ` · Vuelo ${incident.flightId}` : ''}</small></div><p>{incident.description}</p><time>{new Intl.DateTimeFormat('es-PE', { dateStyle: 'short', timeStyle: 'short' }).format(new Date(incident.reportedAt))}</time></article>)}</div><footer className="table-footer"><span>Mostrando {visibleIncidents.length} de {incidents.length} incidencias</span><div><button aria-label="Página anterior de incidencias" disabled={currentIncidentPage === 1} onClick={() => setIncidentPage(currentIncidentPage - 1)}>‹</button><button className="active" aria-label={`Página ${currentIncidentPage} de ${incidentPageCount}`} disabled>{currentIncidentPage} / {incidentPageCount}</button><button aria-label="Página siguiente de incidencias" disabled={currentIncidentPage === incidentPageCount} onClick={() => setIncidentPage(currentIncidentPage + 1)}>›</button></div></footer></section>
         </>}
       </div>
     </section>
