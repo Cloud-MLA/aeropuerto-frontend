@@ -123,6 +123,8 @@ Las pruebas de contratos usan respuestas de ejemplo de MS4 y MS5. No sustituyen 
 
 El repositorio incluye `amplify.yml`. En Amplify debe añadirse una regla de reescritura para SPA:
 
+En la consola de Amplify, abre **Hospedaje → Reescrituras y redireccionamientos → Administrar redireccionamientos**. Reemplaza la regla predeterminada `/<*> → /index.html` con estado `404-200` por la regla siguiente con estado `200`; no dejes ambas reglas. Esto permite recargar rutas como `/dashboard/` y `/tickets/` sin recibir HTTP 404.
+
 ```text
 Source: </^[^.]+$|\.(?!(css|gif|ico|jpg|js|png|txt|svg|woff|woff2|ttf|map|json)$)([^.]+$)/>
 Target: /index.html
